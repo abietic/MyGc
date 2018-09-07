@@ -4,6 +4,8 @@
 
 #include "pool.h"
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 
 extern arena *used_arena[];
@@ -28,8 +30,14 @@ pool *malloc_pool() {
         //看是否有空着的pool
         for (ar = used_arena[0]; ar != USED_ARENA_EMPTY; ar = ar->next) {
             b = ar->bits;
+
             if ((~b) != 0)
                 break;
+
+//            char buff[70];
+//            ulltoa(b,buff,2);
+//            printf("%s\n",buff);
+
         }
         //如果全满了
         if (ar == NULL || ar == USED_ARENA_EMPTY) {
@@ -54,6 +62,7 @@ pool *malloc_pool() {
     //如果没有已使用的arena或进行一次GC后仍都满
     if (ar == NULL || ar == USED_ARENA_EMPTY) {
 
+
         //创建一个新arena
         if ((ar = malloc_arena()) == NULL) {
             //allocation fail
@@ -65,12 +74,12 @@ pool *malloc_pool() {
     //在得到的arena中寻找到一个空闲的pool
     int i;
     for (i = 0, b = ar->bits; i < BITS_SIZE; ++i, b >>= 1) {
-        if ((b & 1) == 0)
+        if ((b & UI64_1) == 0)
             break;
     }
 
     //对要分配的pool区位置位
-    ar->bits |= (1 << i);
+    ar->bits |= (UI64_1 << i);
 
     //取得空闲pool的地址
     pl = (void*)(ar->fst_pool) + i * POOL_SIZE;
@@ -103,7 +112,7 @@ uint8_t pool_init(pool *pl, uint8_t idx) {
     memset(pl->bits, 0, sizeof(uint64_t) * 4);
     //将pool头部占用的位置置位
     for (int i = idx2bitsz[idx], j = 0; i > 0 ; --i, ++j) {
-        pl->bits[0] |= (uint64_t)(1 << j);
+        pl->bits[0] |= (UI64_1 << j);
     }
 
     //插入used_pool尾
@@ -130,7 +139,7 @@ void free_pool(pool *pl) {
     intptr_t lc = ((intptr_t)pl - (intptr_t)ar->fst_pool) / POOL_SIZE;
 
     //对相应arena位图进行置位
-    ar->bits ^= (1 << lc);
+    ar->bits ^= (UI64_1 << lc);
 
     //如果arena为空，释放arena
     if (ar->bits == 0 || (ar->bits == MAYBE_EMPTY_ARENA && ar->pools_contain == (ARENA_SIZE/POOL_SIZE - 1))) {
@@ -145,7 +154,7 @@ uint16_t count_used(pool *pl, uint8_t idx) {
     if (pl == NULL || idx > (USED_POOL_SIZE - 1)) {
         return 0;
     }
-    uint16_t sum;
+    uint16_t sum = 0;
     for (int i = 0; i < idx2bitsz[idx]; ++i) {
         uint16_t s;
         HAMMING_WEIGHT(pl->bits[i],s);
@@ -181,7 +190,7 @@ void sort_used_pool(uint8_t idx) {
     }
 }
 
-uint16_t get_first_fit(pool *pl) {
+uint16_t get_first_fit_and_set(pool *pl) {
     if (pl == NULL) {
         return 0;
     }
@@ -191,7 +200,8 @@ uint16_t get_first_fit(pool *pl) {
     for (int i = 0; i < idx2bitsz[idx] && count < max; ++i) {
         uint64_t b = pl->bits[i];
         for (int j = 0; j < 64 && count < max; ++j, ++count) {
-            if ((b & (1 << j)) == 0) {
+            if ((b & (UI64_1 << j)) == 0) {
+                pl->bits[i] |= (UI64_1 << j);
                 return count;
             }
         }
@@ -199,6 +209,7 @@ uint16_t get_first_fit(pool *pl) {
     return 0;
 }
 
+/*
 uint8_t set_bit(pool *pl, intptr_t addr) {
     uint8_t success = 0;
     if (pl == NULL || (intptr_t)pl & (POOL_SIZE - 1) != 0) {
@@ -213,4 +224,4 @@ uint8_t set_bit(pool *pl, intptr_t addr) {
     int b_idx = bit_loc / 64, b_offset = bit_loc % 64;
     pl->bits[b_idx] |= (1 << b_offset);
     return success;
-}
+}*/

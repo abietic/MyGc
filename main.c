@@ -32,17 +32,23 @@ int main() {
         printf("29. %s\n", ss);
     }*/
 
+//    char buff[70];
+//
+//    ulltoa(UINT64_C(18446744073709551615), buff, 2);
+//
+//    printf("%s\n", buff);
+
     printf("Hello, World!%ld\n",
            sizeof(pool));
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 945; ++i) {
         void *ps = dobject_malloc(254);
 
-        printf("%p", ps);
+//        printf("%p\n", ps);
     }
 
     void *p = dobject_malloc(246);
 
-    printf("%p", p);
+//    printf("%p\n", p);
 
     /*p = dobject_malloc(360);
 

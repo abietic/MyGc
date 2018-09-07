@@ -11,6 +11,7 @@
 
 
 #define ARENA_SIZE (256<<10)
+#define UI64_1 UINT64_C(1)
 
 typedef struct arena arena;
 

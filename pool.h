@@ -72,8 +72,8 @@ uint16_t count_used(pool *pl, uint8_t idx);
 
 void sort_used_pool(uint8_t idx);
 
-uint16_t get_first_fit(pool *pl);
+uint16_t get_first_fit_and_set(pool *pl);
 
-uint8_t set_bit(pool *pl, intptr_t addr);
+//uint8_t set_bit(pool *pl, intptr_t addr);
 
 #endif //MYGC_POOL_H

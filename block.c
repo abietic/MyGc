@@ -2,12 +2,13 @@
 // Created by iamyh on 2018/9/4.
 //
 
+
 #include "block.h"
-#include "stdlib.h"
+#include <stdlib.h>
 
 extern const uint16_t const idx2blksz[];
 
-extern const uint8_t const idx2maxus[];
+extern const uint16_t const idx2maxus[];
 
 extern pool *used_pool[];
 
@@ -22,7 +23,7 @@ void *dobject_malloc(size_t nbytes) {
         return large_dobject_malloc(nbytes);
     }
     //best-fit寻找可用block
-    int idx;
+    uint8_t idx;
     for (idx = 0; idx < USED_POOL_SIZE; ++idx) {
         if (idx2blksz[idx] >= nbytes) {
             break;
@@ -69,7 +70,8 @@ void *dobject_malloc(size_t nbytes) {
         pl = new_pl;
     }
     //找到有空位的pool中第一个空闲的位置
-    uint16_t fst_bst = get_first_fit(pl);
+//    uint16_t fst_bst = get_first_fit(pl);
+    uint16_t fst_bst = get_first_fit_and_set(pl);
 
     if (fst_bst == 0) {
         //get fail
@@ -77,8 +79,8 @@ void *dobject_malloc(size_t nbytes) {
 
     //生成相应的block地址
     void *blk_addr = (void*)pl + fst_bst * idx2blksz[idx];
-    //对已分配的空间置位防止被二次分配
-    set_bit(pl, (intptr_t)blk_addr);
+//    //对已分配的空间置位防止被二次分配
+//    set_bit(pl, (intptr_t)blk_addr);
     //对used_pool重新排序
     sort_used_pool(idx);
     return blk_addr;
